@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"strconv"
 	"time"
@@ -13,7 +14,13 @@ import (
 )
 
 func main() {
+	debug := flag.Bool("debug", false, "sets log level to debug")
+	flag.Parse()
+
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if *debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
 
 	ctx := context.Background()
 
@@ -58,12 +65,15 @@ func main() {
 			log.Fatal().Err(err).Msg("Could not find node pools of kubernetes cluster")
 			os.Exit(101)
 		}
+		log.Debug().Interface("nodepools", node_pools).Msg("Retrieved node pools")
 		next_droplet_id := 0
 		should_flip_change := true
 		done := false
 
 		for _, node_pool := range node_pools {
+			log.Debug().Interface("nodepool", node_pool).Msg("Processing nodepool")
 			for _, node := range node_pool.Nodes {
+				log.Debug().Interface("nodepool", node_pool).Interface("node", node).Msg("Processing node")
 				next_droplet_id, err := strconv.Atoi(node.DropletID)
 				if err != nil {
 					log.Warn().Err(err).Msg("Could not parse droplet id")
@@ -71,7 +81,7 @@ func main() {
 				}
 				if floating_ip.Droplet == nil {
 					// fmt.Fprintf(os.Stdout, "Floating IP %s is currently unassigned", floating_ip.IP)
-					log.Debug().Str("floating-ip", floating_ip.IP).Msg("Floating IP is currently unassigned")
+					log.Debug().Str("floating-ip", floating_ip.IP).Str("cluster-id", cluster_id).Int("droplet-id", next_droplet_id).Msg("Floating IP is currently unassigned")
 					should_flip_change = true
 					done = true
 				} else if next_droplet_id == floating_ip.Droplet.ID {
@@ -90,6 +100,7 @@ func main() {
 		}
 
 		if should_flip_change {
+			log.Debug().Str("floating-ip", floating_ip.IP).Int("droplet-id", next_droplet_id).Msg("Floating IP is about to change")
 			var action *godo.Action
 			var err error
 			if next_droplet_id != 0 {
