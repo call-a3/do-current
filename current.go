@@ -113,20 +113,22 @@ func main() {
 			if err != nil {
 				log.Error().Err(err).Msg("Could not perform action on floating IP")
 			}
-			
-			for {
-				action, response, err = client.FloatingIPActions.Get(ctx, floating_ip.IP, action.ID)
-				if err != nil {
-					log.Error().Err(err).Msg("Could not check status of action on floating IP")
-				}
-				if action.Status != "in-progress" {
-					break
-				}
-				log.Trace().Int("action-id", action.ID).Msg("Waiting until action on floating IP completes")
-				if response.Rate.Remaining <= 0 {
-					time.Sleep(response.Rate.Reset.Sub(time.Now()))
-				} else {
-					time.Sleep(10 * time.Second)
+
+			if action != nil {
+				for {
+					action, response, err = client.FloatingIPActions.Get(ctx, floating_ip.IP, action.ID)
+					if err != nil {
+						log.Error().Err(err).Msg("Could not check status of action on floating IP")
+					}
+					if action.Status != "in-progress" {
+						break
+					}
+					log.Trace().Int("action-id", action.ID).Msg("Waiting until action on floating IP completes")
+					if response.Rate.Remaining <= 0 {
+						time.Sleep(response.Rate.Reset.Sub(time.Now()))
+					} else {
+						time.Sleep(10 * time.Second)
+					}
 				}
 			}
 		}
