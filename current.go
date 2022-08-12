@@ -73,7 +73,8 @@ func main() {
 			log.Debug().Interface("nodepool", node_pool).Msg("Processing nodepool")
 			for _, node := range node_pool.Nodes {
 				log.Debug().Interface("nodepool", node_pool).Interface("node", node).Msg("Processing node")
-				next_droplet_id, err := strconv.Atoi(node.DropletID)
+				parsed_droplet_id, err := strconv.Atoi(node.DropletID)
+				next_droplet_id = parsed_droplet_id
 				if err != nil {
 					log.Warn().Err(err).Msg("Could not parse droplet id")
 					break
