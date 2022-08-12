@@ -105,7 +105,7 @@ func main() {
 			if next_droplet_id != 0 {
 				log.Info().Str("floating-ip", floating_ip.IP).Int("droplet-id", next_droplet_id).Msg("Assigning floating IP to a(nother) droplet")
 				action, _, err = client.FloatingIPActions.Assign(ctx, floating_ip.IP, next_droplet_id)
-			} else {
+			} else if floating_ip.Droplet != nil {
 				log.Info().Str("floating-ip", floating_ip.IP).Msg("Unassigning floating IP because cluster has no droplets")
 				action, _, err = client.FloatingIPActions.Unassign(ctx, floating_ip.IP)
 			}
