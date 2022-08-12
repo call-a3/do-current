@@ -30,13 +30,13 @@ func main() {
 		log.Fatal().Msg("Environment variable DO_API_TOKEN is required")
 		errors++
 	}
-	
+
 	ip_address := os.Getenv("DO_FLOATING_IP")
 	if ip_address == "" {
 		log.Fatal().Msg("Environment variable DO_FLOATING_IP is required")
 		errors++
 	}
-	
+
 	cluster_id := os.Getenv("DO_CLUSTER_ID")
 	if cluster_id == "" {
 		log.Fatal().Msg("Environment variable DO_CLUSTER_ID is required")
@@ -47,11 +47,10 @@ func main() {
 		os.Exit(errors)
 	}
 
-    tokensource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tokensource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	client := godo.NewClient(oauth2.NewClient(ctx, tokensource))
 
 	for {
-
 		floating_ip, _, err := client.FloatingIPs.Get(ctx, ip_address)
 		if err != nil {
 			log.Fatal().Err(err).Msg("Could not find floating IP")
@@ -110,6 +109,7 @@ func main() {
 				log.Info().Str("floating-ip", floating_ip.IP).Msg("Unassigning floating IP because cluster has no droplets")
 				action, _, err = client.FloatingIPActions.Unassign(ctx, floating_ip.IP)
 			}
+
 			if err != nil {
 				log.Error().Err(err).Msg("Could not perform action on floating IP")
 			}
@@ -134,12 +134,12 @@ func main() {
 		duration_until_reset := response.Rate.Reset.Sub(time.Now())
 		delay_until_next_cycle := 1 * time.Minute
 		if response.Rate.Remaining <= 0 {
-			delay_until_next_cycle = duration_until_reset + 5 * time.Second
+			delay_until_next_cycle = duration_until_reset + 5*time.Second
 			// fmt.Fprintf(os.Stdout, "Waiting for %s until the rate limit has been reset\n", duration_until_reset.String())
 			log.Info().Str("sleep-duration", delay_until_next_cycle.String()).Msg("Waiting until the rate limit has been reset")
 		} else {
 			possible_cycles := response.Rate.Remaining / 5
-			delay_until_next_cycle = longestDuration(duration_until_reset / time.Duration(possible_cycles), 1 * time.Minute)
+			delay_until_next_cycle = longestDuration(duration_until_reset/time.Duration(possible_cycles), 1*time.Minute)
 			// fmt.Fprintf(os.Stdout, "Waiting for %s before checking again.\n", delay_until_next_cycle.String())
 			log.Info().Str("sleep-duration", delay_until_next_cycle.String()).Msg("Waiting before checking floating IP assignment again")
 		}
